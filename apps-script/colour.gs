@@ -41,7 +41,7 @@ function hsvToHex(h, s, v) {
   }
 
   // Return the calculated RGB values in HEX format (e.g. #FFFFFF).
-  return "#" + ((1 << 24) + ((r * 255) << 16) + ((g * 255) << 8) + (b * 255)).toString(16).slice(1);
+  return "#" + ((1 << 24) + (Math.round(r * 255) << 16) + (Math.round(g * 255) << 8) + Math.round(b * 255)).toString(16).slice(1);
 }
 
 /**

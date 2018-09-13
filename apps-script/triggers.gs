@@ -5,16 +5,30 @@
 function onEdit(e) {
   // Track changes to the F:F range.
   var notation = e.range.getA1Notation();
-  if (/^F[0-9]+$/.test(notation) == false)
+  if (new RegExp("^" + settings["columns"]["compliant"] + "[0-9]+$").test(notation) == false) {
     return;
+  }
 
   // Set the background colour of the cell based on the tickbox state.
-  if (e.value === "TRUE")
-    e.range.setBackground("#74BB3A");
-  else if (e.value === "FALSE")
-    e.range.setBackground("#BB3A3A");
-  else
-    e.range.setBackground("#277E7E");
+  if (e.value === "TRUE") {
+    e.range.setBackground(hsvToHex(
+      settings["colours"]["hues"]["high"],
+      settings["colours"]["saturation"],
+      settings["colours"]["value"]
+    ));
+  } else if (e.value === "FALSE") {
+    e.range.setBackground(hsvToHex(
+      settings["colours"]["hues"]["low"],
+      settings["colours"]["saturation"],
+      settings["colours"]["value"]
+    ));
+  } else {
+    e.range.setBackground(hsvToHex(
+      settings["colours"]["hues"]["other"],
+      settings["colours"]["saturation"],
+      settings["colours"]["value"]
+    ));
+  }
 }
 
 /**
@@ -25,17 +39,22 @@ function updateNextReviewColumn() {
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
   sheets.forEach(function(sheet) {
     // Calculate the amount of relevant cells containing a note (https://stackoverflow.com/a/17637159).
-    var range = sheet.getRange("E2:E").getNotes();
+    var range = sheet.getRange(settings["columns"]["nextreview"] + "2:" + settings["columns"]["nextreview"]).getNotes();
     var last = range.filter(String).length + 1;
 
     for (var i = 2; i <= last; i++) {
-      var cell = sheet.getRange("E" + i);
+      var cell = sheet.getRange(settings["columns"]["nextreview"] + i);
       var note = cell.getNote();
 
       // -1 represents a policy with an unknown or no review date.
       if (note === "-1") {
         cell.setValue("N/A");
-        cell.setBackground("#277E7E");
+        cell.setBackground(hsvToHex(
+          settings["colours"]["hues"]["other"],
+          settings["colours"]["saturation"],
+          settings["colours"]["value"]
+        ));
+
         continue;
       }
 
@@ -46,15 +65,33 @@ function updateNextReviewColumn() {
       else
         remaining = (remaining / 86400).toFixed();
 
-      cell.setValue(Math.abs(remaining) + (remaining >= 0 ? " days until next review" : " days overdue"));
-
       // Use fixed values if the days remaining/overdue are outside of a certain range.
-      if (remaining > 99)
-        cell.setBackground("#74BB3A");
-      else if (remaining < 0)
-        cell.setBackground("#BB3A3A");
-      else
-        cell.setBackground(hsvToHex(interpolateHue(0.0, 93.0, 100)[remaining], 69.0, 73.3));
+      if (remaining > 99) {
+        cell.setBackground(hsvToHex(
+          settings["colours"]["hues"]["high"],
+          settings["colours"]["saturation"],
+          settings["colours"]["value"]
+        ));
+      } else if (remaining < 0) {
+        cell.setBackground(hsvToHex(
+          settings["colours"]["hues"]["low"],
+          settings["colours"]["saturation"],
+          settings["colours"]["value"]
+        ));
+      } else {
+        cell.setBackground(hsvToHex(
+          interpolateHue(
+            settings["colours"]["hues"]["low"],
+            settings["colours"]["hues"]["high"],
+            settings["colours"]["points"]
+          )[remaining],
+          settings["colours"]["saturation"],
+          settings["colours"]["value"]
+        ));
+      }
+      
+      // Update the cell's value.
+      cell.setValue(Math.abs(remaining) + (remaining >= 0 ? " days until next review" : " days overdue"));
     }
   });
 }

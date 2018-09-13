@@ -1,0 +1,16 @@
+var settings = {
+  "columns": {
+    "nextreview": "",
+    "compliant": ""
+  },
+  "colours": {
+    "hues": {
+      "low": 0.0,
+      "high": 0.0,
+      "other": 0.0,
+    },
+    "saturation": 0.0,
+    "value": 0.0,
+    "points": 0
+  }
+}
